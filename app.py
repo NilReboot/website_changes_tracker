@@ -116,6 +116,15 @@ def parse_args() -> argparse.Namespace:
                         help='Time window in minutes for checking updates.')
     return parser.parse_args()
 
+def highlight_diffs(old_content: str, new_content: str) -> str:
+    from difflib import unified_diff
+    from pygments import highlight
+    from pygments.lexers import DiffLexer
+    from pygments.formatters import TerminalFormatter
+
+    diff = unified_diff(old_content.splitlines(keepends=True), new_content.splitlines(keepends=True), fromfile='old', tofile='new')
+    return highlight(''.join(diff), DiffLexer(), TerminalFormatter())
+
 def monitor_website_changes(cursor: sqlite3.Cursor, urls: List[str], time_delta_minutes: int) -> Dict[str, int]:
     stats = {'num_errors': 0, 'num_fetches': 0, 'num_changes': 0, 'num_new_pages': 0}
 
@@ -135,6 +144,8 @@ def monitor_website_changes(cursor: sqlite3.Cursor, urls: List[str], time_delta_
                 store_website_content(cursor, url, current_content)
             elif old_content_hash != current_content_hash:
                 print(f'Page has changed: {url}')
+                # !INFO: Switch from hashes to content comparison later
+                print(highlight_diffs(current_content_hash, old_content_hash))
                 stats['num_changes'] += 1
                 archive_old_website_content(cursor, url)
                 store_website_content(cursor, url, current_content)
