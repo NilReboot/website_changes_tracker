@@ -96,15 +96,17 @@ def store_website_content(cursor: sqlite3.Cursor, url: str, content: str) -> Non
 
     cursor.execute('INSERT INTO websites (url, timestamp, content_hash, content) VALUES (?, ?, ?, ?)', (url, timestamp, content_hash, content))
 
-def archive_old_website_content(cursor: sqlite3.Cursor, url: str) -> None:
+def archive_old_website_content(cursor: sqlite3.Cursor, url: str) -> str:
 
     cursor.execute('SELECT * FROM websites WHERE url = ?', (url,))
     data = cursor.fetchone()
+    website_content = data[3]
 
     assert data is not None, "Attempted to archive old record, but couldn't find data to archive."
 
     cursor.execute('INSERT INTO website_archive (url, timestamp, content_hash, content) VALUES (?, ?, ?, ?)', data)
     cursor.execute('DELETE FROM websites WHERE url = ?', (url,))
+    return website_content
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description='Monitor changes in websites.')
@@ -144,10 +146,9 @@ def monitor_website_changes(cursor: sqlite3.Cursor, urls: List[str], time_delta_
                 store_website_content(cursor, url, current_content)
             elif old_content_hash != current_content_hash:
                 print(f'Page has changed: {url}')
-                # !INFO: Switch from hashes to content comparison later
-                print(highlight_diffs(current_content_hash, old_content_hash))
                 stats['num_changes'] += 1
-                archive_old_website_content(cursor, url)
+                old_content = archive_old_website_content(cursor, url)
+                print(highlight_diffs(current_content, old_content))
                 store_website_content(cursor, url, current_content)
             cursor.execute('UPDATE urls SET last_checked = ? WHERE url = ?', (datetime.now(), url))
 
