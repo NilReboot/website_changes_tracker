@@ -125,7 +125,8 @@ def highlight_diffs(old_content: str, new_content: str) -> str:
     from pygments.formatters import TerminalFormatter
 
     diff = unified_diff(old_content.splitlines(keepends=True), new_content.splitlines(keepends=True), fromfile='old', tofile='new')
-    return highlight(''.join(diff), DiffLexer(), TerminalFormatter())
+    changed_lines = [line for line in diff if line.startswith('-') or line.startswith('+')]
+    return highlight(''.join(changed_lines), DiffLexer(), TerminalFormatter())
 
 def monitor_website_changes(cursor: sqlite3.Cursor, urls: List[str], time_delta_minutes: int) -> Dict[str, int]:
     stats = {'num_errors': 0, 'num_fetches': 0, 'num_changes': 0, 'num_new_pages': 0}
