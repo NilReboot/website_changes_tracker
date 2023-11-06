@@ -17,7 +17,8 @@ def create_tables(cursor: sqlite3.Cursor) -> None:
     '''
     create_urls_table_query = '''
     CREATE TABLE IF NOT EXISTS urls (
-        url TEXT PRIMARY KEY
+        url TEXT PRIMARY KEY,
+        last_checked timestamp
     )
     '''
     create_website_archive_table_query = '''
