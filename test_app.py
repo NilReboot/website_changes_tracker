@@ -25,9 +25,10 @@ class TestApp(unittest.TestCase):
         self.assertIsNone(result)
 
     def test_get_all_urls(self):
-        update_urls(self.cursor, ['http://example.com'])
+        urls = ['http://example.com','http://example2.com']
+        update_urls(self.cursor, urls)
         result = get_all_urls(self.cursor)
-        self.assertEqual(result, ['http://example.com'])
+        self.assertEqual(result, urls)
 
     def test_should_fetch_content(self):
         store_website_content(self.cursor, 'http://example.com', 'old content')
